@@ -54,6 +54,3 @@ A real-time object detection system using YOLOv8.
 
 https://github.com/Rohith-vencenzo
 
-## Portfolio Website
-
-https://rohith-vencenzo.github.io/
