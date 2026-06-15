@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>🎯 Object Detection | CodeAlpha AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+<div class="bg-animation">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+</div>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">🎯</span>
+            <div>
+                <h1>ObjectAI</h1>
+                <span>Powered by CodeAlpha</span>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="badge">
+                <i class="fas fa-brain"></i> YOLOv8
+            </div>
+            <div class="badge">
+                <i class="fas fa-video"></i> Real-Time
+            </div>
+            <div class="badge">
+                <i class="fas fa-cube"></i> 80+ Objects
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+
+        <!-- LEFT: Video Section -->
+        <div class="video-section">
+
+            <!-- Mode Tabs -->
+            <div class="mode-tabs">
+                <button class="mode-tab active" id="webcamTab">
+                    <i class="fas fa-video"></i> Live Webcam
+                </button>
+                <button class="mode-tab" id="uploadTab">
+                    <i class="fas fa-image"></i> Upload Image
+                </button>
+            </div>
+
+            <!-- WEBCAM MODE -->
+            <div class="video-card" id="webcamMode">
+                <div class="video-header">
+                    <div class="live-badge">
+                        <span class="live-dot"></span>
+                        <span>LIVE FEED</span>
+                    </div>
+                    <div class="video-stats">
+                        <span class="stat">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span id="fpsDisplay">0</span> FPS
+                        </span>
+                        <span class="stat">
+                            <i class="fas fa-cube"></i>
+                            <span id="objectsDisplay">0</span> Objects
+                        </span>
+                    </div>
+                </div>
+
+                <div class="video-wrapper">
+                    <div class="video-placeholder" id="videoPlaceholder">
+                        <div class="placeholder-content">
+                            <div class="scan-animation">
+                                <i class="fas fa-crosshairs"></i>
+                            </div>
+                            <h3>Camera Not Active</h3>
+                            <p>Click START DETECTION to begin</p>
+                        </div>
+                    </div>
+                    <img id="videoFeed" src="" alt="Live Feed" style="display:none;"/>
+                </div>
+
+                <div class="video-controls">
+                    <button class="control-btn start-btn" id="startBtn">
+                        <i class="fas fa-play"></i> Start Detection
+                    </button>
+                    <button class="control-btn stop-btn" id="stopBtn" disabled>
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                    <button class="control-btn reset-btn" id="resetBtn">
+                        <i class="fas fa-redo"></i> Reset Stats
+                    </button>
+                </div>
+            </div>
+
+            <!-- UPLOAD MODE -->
+            <div class="video-card" id="uploadMode" style="display:none;">
+                <div class="video-header">
+                    <div class="upload-header-info">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Image Detection Mode</span>
+                    </div>
+                </div>
+
+                <div class="video-wrapper">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-file-image"></i>
+                            <h3>Upload an Image</h3>
+                            <p>Click to browse or drag & drop</p>
+                            <span class="file-types">JPG, PNG, GIF (Max 10MB)</span>
+                            <input type="file" id="imageInput" accept="image/*" style="display:none;"/>
+                            <button class="browse-btn" id="browseBtn">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                        </div>
+                    </div>
+                    <img id="resultImage" style="display:none; width:100%; height:100%; object-fit:contain;"/>
+                </div>
+
+                <div class="video-controls">
+                    <button class="control-btn start-btn" id="detectImageBtn" disabled>
+                        <i class="fas fa-search"></i> Detect Objects
+                    </button>
+                    <button class="control-btn reset-btn" id="clearImageBtn">
+                        <i class="fas fa-trash"></i> Clear Image
+                    </button>
+                </div>
+
+                <div class="upload-results" id="uploadResults" style="display:none;">
+                    <h4><i class="fas fa-list-check"></i> Detection Results:</h4>
+                    <div id="uploadObjectsList"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Stats Panel -->
+        <div class="stats-section">
+
+            <div class="stats-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar"></i> Detection Stats</h3>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-icon" style="background:rgba(108,99,255,0.2)">
+                            <i class="fas fa-cube" style="color:#6C63FF"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="currentObjects">0</span>
+                            <span class="stat-label">Current Objects</span>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon" style="background:rgba(67,233,123,0.2)">
+                            <i class="fas fa-tachometer-alt" style="color:#43E97B"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="currentFPS">0</span>
+                            <span class="stat-label">FPS</span>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon" style="background:rgba(255,101,132,0.2)">
+                            <i class="fas fa-database" style="color:#FF6584"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalObjects">0</span>
+                            <span class="stat-label">Total Detected</span>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon" style="background:rgba(255,215,0,0.2)">
+                            <i class="fas fa-tags" style="color:#FFD700"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="uniqueObjects">0</span>
+                            <span class="stat-label">Unique Classes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-list"></i> Objects Detected</h3>
+                    <span class="refresh-info">
+                        <i class="fas fa-sync-alt fa-spin"></i> Live
+                    </span>
+                </div>
+                <div class="objects-list" id="objectsList">
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>No objects detected yet</p>
+                        <span>Start detection to see results</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card model-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-info-circle"></i> Model Info</h3>
+                </div>
+                <div class="model-info">
+                    <div class="info-row">
+                        <span class="info-label">Model</span>
+                        <span class="info-value">YOLOv8 Nano</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Framework</span>
+                        <span class="info-value">Ultralytics</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Dataset</span>
+                        <span class="info-value">COCO (80 classes)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Confidence</span>
+                        <span class="info-value">40% Threshold</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Backend</span>
+                        <span class="info-value">Python + Flask</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Built by</span>
+                        <span class="info-value highlight">CodeAlpha Intern</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>
+            🎯 Built with ❤️ by <strong>CodeAlpha Intern</strong> |
+            <i class="fab fa-python"></i> Python + YOLOv8 + OpenCV + Flask
+        </p>
+    </footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
