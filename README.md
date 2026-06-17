@@ -54,3 +54,24 @@ A real-time object detection system using YOLOv8.
 
 https://github.com/Rohith-vencenzo
 
+## How to Run
+
+### FAQ Chatbot
+1. Open terminal
+2. Install dependencies:
+   pip install -r requirements.txt
+3. Run:
+   python chatbot.py
+
+### Language Translation Tool
+1. Install dependencies:
+   pip install -r requirements.txt
+2. Run:
+   python translator.py
+
+### Object Detection
+1. Install dependencies:
+   pip install -r requirements.txt
+2. Run:
+   python detection.py
+
