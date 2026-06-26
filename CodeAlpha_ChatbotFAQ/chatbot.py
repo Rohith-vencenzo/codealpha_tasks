@@ -1,6 +1,5 @@
 # =====================================================
 # Smart FAQ Chatbot
-# Developer: [Your Name]
 # Tech: Flask + NLTK + Cosine Similarity
 # =====================================================
 
