@@ -1,6 +1,5 @@
 # =====================================================
 # Language Translation Tool
-# Developer: [Your Name]
 # Tech: Flask + Deep Translator + Python
 # =====================================================
 
