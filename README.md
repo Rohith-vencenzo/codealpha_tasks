@@ -16,6 +16,13 @@ A web application that translates text between multiple languages.
 * CSS
 * JavaScript
 
+  OUTPUT
+  ## Task 1 Output
+
+##Output
+
+![Language Translation Output](CodeAlpha_LanguageTranslationTool/translation_output.png)
+
 ---
 
 ## Task 2: FAQ Chatbot
@@ -32,6 +39,8 @@ An AI-powered chatbot that answers frequently asked questions using NLP.
 * CSS
 * JavaScript
 
+##OUTPUT
+![Chatbot Output](CodeAlpha_ChatbotFAQ/chatbot_output.png)
 ---
 
 ## Task 3: Object Detection and Tracking
@@ -48,6 +57,9 @@ A real-time object detection system using YOLOv8.
 * CSS
 * JavaScript
 
+##Output
+
+![Object Detection Output](CodeAlpha_ObjectDetection/object_detection_output.png)
 ---
 
 ## GitHub Profile
