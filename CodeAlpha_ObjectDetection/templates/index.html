@@ -1,399 +1,1063 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CodeAlpha — Object Detection &amp; Tracking</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha - AI Object Detection & Tracking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-  <!-- Font Awesome Icons -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-  />
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(120, 40, 200, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 200, 180, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(255, 60, 100, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-  <!-- Project Stylesheet -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+        /* ── Header ── */
+        .header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #7928ca, #00c4b4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(121, 40, 202, 0.5);
+        }
+
+        .logo-text h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #00c4b4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 196, 180, 0.1);
+            border: 1px solid rgba(0, 196, 180, 0.3);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            color: #00c4b4;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #00c4b4;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .live-dot.inactive {
+            background: #555;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        /* ── Main Layout ── */
+        .main {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            gap: 24px;
+            padding: 30px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ── Video Panel ── */
+        .video-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .video-wrapper {
+            position: relative;
+            background: #0d0d1a;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow:
+                0 0 0 1px rgba(120, 40, 200, 0.2),
+                0 20px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .video-wrapper::before,
+        .video-wrapper::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .video-wrapper::before {
+            top: 12px; left: 12px;
+            border-top: 2px solid #7928ca;
+            border-left: 2px solid #7928ca;
+            border-radius: 4px 0 0 0;
+        }
+        .video-wrapper::after {
+            bottom: 12px; right: 12px;
+            border-bottom: 2px solid #00c4b4;
+            border-right: 2px solid #00c4b4;
+            border-radius: 0 0 4px 0;
+        }
+
+        #video {
+            width: 100%;
+            height: 480px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d0d1a, #12122a);
+        }
+
+        .placeholder-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .placeholder-text {
+            color: #444;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .video-top-bar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            padding: 12px 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .video-tag {
+            background: rgba(121, 40, 202, 0.8);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .video-tag.live {
+            background: rgba(220, 50, 50, 0.85);
+            animation: livePulse 2s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220,50,50,0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(220,50,50,0); }
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            transition: background 0.3s;
+        }
+
+        .status-indicator.active {
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+            animation: pulse 1.5s infinite;
+        }
+
+        #statusText {
+            font-size: 14px;
+            color: #777;
+            transition: color 0.3s;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00c4b4, #00a896);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(0, 196, 180, 0.3);
+        }
+
+        .btn-start:hover {
+            box-shadow: 0 6px 30px rgba(0, 196, 180, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ff4d6d, #c9184a);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(255, 77, 109, 0.3);
+        }
+
+        .btn-stop:hover {
+            box-shadow: 0 6px 30px rgba(255, 77, 109, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-reset {
+            background: rgba(255,255,255,0.07);
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex: 0.5;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── Stat Cards ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: var(--accent);
+            opacity: 0.7;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), white);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-sub {
+            font-size: 10px;
+            color: #444;
+        }
+
+        .card-fps   { --accent: #f59e0b; }
+        .card-obj   { --accent: #3b82f6; }
+        .card-trk   { --accent: #8b5cf6; }
+        .card-total { --accent: #10b981; }
+
+        /* ══════════════════════════════════════════
+           LIVE OBJECTS DETECTED PANEL  ← KEY FEATURE
+           ══════════════════════════════════════════ */
+        .detected-panel {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+        }
+
+        .detected-panel h3 {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* The big object cards that show PERSON, PHONE, etc. */
+        #detectedObjects {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .object-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .object-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateX(3px);
+        }
+
+        /* Big emoji icon for each object type */
+        .object-emoji {
+            font-size: 32px;
+            min-width: 42px;
+            text-align: center;
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+        }
+
+        .object-info {
+            flex: 1;
+        }
+
+        /* Big bold class name - PERSON, PHONE etc */
+        .object-class-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .object-class-sub {
+            font-size: 11px;
+            color: #555;
+        }
+
+        /* Count badge */
+        .object-count-badge {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(121,40,202,0.3));
+            border: 1px solid rgba(139,92,246,0.4);
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #a78bfa;
+        }
+
+        /* Glowing border when object is detected */
+        .object-card.active {
+            border-color: rgba(0, 196, 180, 0.5);
+            box-shadow: 0 0 15px rgba(0, 196, 180, 0.1);
+        }
+
+        .no-objects {
+            text-align: center;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .no-objects .no-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        .no-objects p {
+            font-size: 13px;
+            color: #444;
+        }
+
+        /* ── Scan line ── */
+        @keyframes scanline {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, rgba(0,196,180,0.6), transparent);
+            animation: scanline 3s linear infinite;
+            pointer-events: none;
+            z-index: 16;
+            display: none;
+        }
+
+        .scan-line.active { display: block; }
+
+        /* ── Upload Section ── */
+        .upload-section {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto 40px;
+            padding: 0 40px;
+        }
+
+        .upload-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .upload-card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #aaa;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #888;
+            transition: all 0.2s;
+        }
+
+        .file-label:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(139,92,246,0.5);
+            color: #ccc;
+        }
+
+        #imageInput { display: none; }
+
+        #fileName { font-size: 13px; color: #666; }
+
+        .btn-upload {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #7928ca, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(121,40,202,0.3);
+        }
+
+        .btn-upload:hover {
+            box-shadow: 0 6px 30px rgba(121,40,202,0.5);
+            transform: translateY(-1px);
+        }
+
+        #uploadResult { margin-top: 20px; }
+
+        .result-grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        #resultImage {
+            max-width: 640px;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .result-info { flex: 1; min-width: 200px; }
+
+        .result-stat {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+        }
+
+        .result-stat h4 { color: #555; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+        .result-stat p  { color: #a78bfa; font-size: 28px; font-weight: 700; margin-top: 4px; }
+
+        .detection-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .det-tag {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(139,92,246,0.2);
+            border: 1px solid rgba(139,92,246,0.4);
+            color: #a78bfa;
+        }
+
+        .processing {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #666;
+            font-size: 14px;
+            padding: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-top: 2px solid #7928ca;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Footer ── */
+        .footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #333;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .footer span {
+            background: linear-gradient(135deg, #7928ca, #00c4b4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .main { flex-direction: column; padding: 16px; }
+            .sidebar { width: 100%; }
+            .header { padding: 14px 16px; }
+            .upload-section { padding: 0 16px; }
+        }
+    </style>
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       ANIMATED BACKGROUND
-       ═══════════════════════════════════════════════════════════ -->
-  <div class="bg-animation" aria-hidden="true">
-    <div class="particle p1"></div>
-    <div class="particle p2"></div>
-    <div class="particle p3"></div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════
-       PAGE WRAPPER
-       ═══════════════════════════════════════════════════════════ -->
-  <div class="container">
-
-    <!-- ── HEADER ─────────────────────────────────────────────── -->
-    <header class="header">
-      <div class="logo">
-        <div class="logo-icon">🎯</div>
-        <div>
-          <h1>CodeAlpha</h1>
-          <span>Object Detection &amp; Tracking — Task 4</span>
-        </div>
-      </div>
-
-      <div class="header-badges">
-        <div class="badge">
-          <i class="fas fa-brain"></i> YOLOv8
-        </div>
-        <div class="badge">
-          <i class="fas fa-route"></i> SORT Tracking
-        </div>
-        <div class="badge">
-          <i class="fas fa-video"></i> Live MJPEG
-        </div>
-      </div>
-    </header>
-    <!-- ── END HEADER ─────────────────────────────────────────── -->
-
-
-    <!-- ── MAIN CONTENT ──────────────────────────────────────── -->
-    <main class="main-content">
-
-      <!-- ════════════════════════════════════════════════════════
-           LEFT PANEL — VIDEO + UPLOAD
-           ════════════════════════════════════════════════════════ -->
-      <section class="video-section" aria-label="Detection panel">
-
-        <!-- Mode Tabs -->
-        <div class="mode-tabs" role="tablist">
-          <button
-            id="webcamTab"
-            class="mode-tab active"
-            role="tab"
-            aria-selected="true"
-            aria-controls="webcamMode"
-          >
-            <i class="fas fa-video"></i> Webcam Detection
-          </button>
-          <button
-            id="uploadTab"
-            class="mode-tab"
-            role="tab"
-            aria-selected="false"
-            aria-controls="uploadMode"
-          >
-            <i class="fas fa-upload"></i> Image Upload
-          </button>
-        </div>
-        <!-- End Mode Tabs -->
-
-        <!-- ─────────────────────────────────────────────────────
-             WEBCAM MODE PANEL
-             ───────────────────────────────────────────────────── -->
-        <div id="webcamMode" class="video-card" role="tabpanel">
-
-          <!-- Video Header -->
-          <div class="video-header">
-            <div class="live-badge">
-              <div class="live-dot" id="liveDot"></div>
-              LIVE
+    <!-- ── Header ── -->
+    <div class="header">
+        <div class="header-logo">
+            <div class="logo-icon">🎯</div>
+            <div class="logo-text">
+                <h1>CodeAlpha AI</h1>
+                <span>Object Detection & Tracking — Task 4</span>
             </div>
-            <div class="video-stats">
-              <div class="stat">
-                <i class="fas fa-tachometer-alt"></i>
-                <span id="fpsDisplay">0</span> FPS
-              </div>
-              <div class="stat">
-                <i class="fas fa-cube"></i>
-                <span id="objectsDisplay">0</span> Objects
-              </div>
-            </div>
-          </div>
-          <!-- End Video Header -->
+        </div>
+        <div class="header-badge">
+            <div class="live-dot inactive" id="liveDot"></div>
+            <span id="liveText">OFFLINE</span>
+        </div>
+    </div>
 
-          <!-- Video / Placeholder Area -->
-          <div class="video-wrapper">
+    <!-- ── Main ── -->
+    <div class="main">
 
-            <!-- Placeholder shown when camera is OFF -->
-            <div class="video-placeholder" id="videoPlaceholder">
-              <div class="placeholder-content">
-                <div class="scan-animation">
-                  <i class="fas fa-camera"></i>
+        <!-- Left: Video -->
+        <div class="video-panel">
+            <div class="video-wrapper">
+                <div class="scan-line" id="scanLine"></div>
+                <div class="video-top-bar">
+                    <div class="video-tag" id="videoTag">STANDBY</div>
+                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">YOLOv8n + SORT</div>
                 </div>
-                <h3>Camera Inactive</h3>
-                <p>Click <strong>Start Detection</strong> to begin</p>
-              </div>
+                <div id="placeholder" class="video-placeholder">
+                    <div class="placeholder-icon">📷</div>
+                    <div class="placeholder-text">Press START DETECTION to begin</div>
+                </div>
+                <img id="video" src="" alt="Video Feed"
+                     style="display:none; width:100%; height:480px; object-fit:cover;">
             </div>
 
-            <!--
-              MJPEG Stream Image
-              - src is intentionally empty on page load
-              - JavaScript sets src only AFTER /start_detection succeeds
-              - A timestamp query parameter prevents browser caching
-              - display:none keeps it hidden until detection starts
-            -->
-            <img
-              id="videoFeed"
-              src=""
-              alt="Live webcam object detection feed"
-              style="display: none;"
-            />
-          </div>
-          <!-- End Video Wrapper -->
+            <div class="status-bar">
+                <div class="status-indicator" id="statusDot"></div>
+                <span id="statusText">Waiting to start...</span>
+            </div>
 
-          <!-- Webcam Control Buttons -->
-          <div class="video-controls">
-            <button id="startBtn" class="control-btn start-btn">
-              <i class="fas fa-play"></i> Start Detection
-            </button>
-            <button id="stopBtn" class="control-btn stop-btn" disabled>
-              <i class="fas fa-stop"></i> Stop Detection
-            </button>
-            <button id="resetBtn" class="control-btn reset-btn">
-              <i class="fas fa-redo"></i> Reset Statistics
-            </button>
-          </div>
-          <!-- End Webcam Controls -->
+            <div class="controls">
+                <button class="btn btn-start" onclick="startDetection()">▶ &nbsp;START DETECTION</button>
+                <button class="btn btn-stop"  onclick="stopDetection()">■ &nbsp;STOP</button>
+                <button class="btn btn-reset" onclick="resetStats()">↺</button>
+            </div>
+        </div>
+
+        <!-- Right: Sidebar -->
+        <div class="sidebar">
+
+            <!-- Stats Grid -->
+            <div class="stats-row">
+                <div class="stat-card card-fps">
+                    <div class="stat-label">⚡ FPS</div>
+                    <div class="stat-value" id="fps">0</div>
+                    <div class="stat-sub">Frames/sec</div>
+                </div>
+                <div class="stat-card card-obj">
+                    <div class="stat-label">📦 Objects</div>
+                    <div class="stat-value" id="objects">0</div>
+                    <div class="stat-sub">This frame</div>
+                </div>
+                <div class="stat-card card-trk">
+                    <div class="stat-label">🎯 Tracks</div>
+                    <div class="stat-value" id="tracks">0</div>
+                    <div class="stat-sub">Active IDs</div>
+                </div>
+                <div class="stat-card card-total">
+                    <div class="stat-label">📊 Total</div>
+                    <div class="stat-value" id="total">0</div>
+                    <div class="stat-sub">Cumulative</div>
+                </div>
+            </div>
+
+            <!-- ══ LIVE DETECTED OBJECTS PANEL ══ -->
+            <div class="detected-panel">
+                <h3>🔍 &nbsp; What's In The Camera</h3>
+                <div id="detectedObjects">
+                    <div class="no-objects">
+                        <div class="no-icon">👁️</div>
+                        <p>Start detection to see<br>what's in the camera</p>
+                    </div>
+                </div>
+            </div>
 
         </div>
-        <!-- End Webcam Mode Panel -->
+    </div>
 
-
-        <!-- ─────────────────────────────────────────────────────
-             UPLOAD MODE PANEL
-             ───────────────────────────────────────────────────── -->
-        <div id="uploadMode" class="video-card" role="tabpanel" style="display: none;">
-
-          <!-- Upload Header -->
-          <div class="video-header">
-            <div class="upload-header-info">
-              <i class="fas fa-image"></i> Image Upload Detection
+    <!-- ── Upload Section ── -->
+    <div class="upload-section">
+        <div class="upload-card">
+            <h2>🖼️ &nbsp; Analyze Static Image</h2>
+            <div class="upload-controls">
+                <label class="file-label" for="imageInput">📂 &nbsp; Choose Image</label>
+                <input type="file" id="imageInput" accept="image/*">
+                <span id="fileName">No file selected</span>
+                <button class="btn-upload" onclick="uploadImage()">🔍 &nbsp; Detect Objects</button>
             </div>
-          </div>
-
-          <!-- Upload Area + Result Image -->
-          <div class="video-wrapper">
-
-            <!--
-              Drop zone — shown before a file is selected.
-              Clicking anywhere inside triggers the hidden file input.
-            -->
-            <div class="upload-area" id="uploadArea">
-              <div class="upload-content">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <h3>Drop an Image Here</h3>
-                <p>or click the button below to browse</p>
-                <span class="file-types">
-                  Supported: JPG · PNG · JPEG · BMP · GIF
-                </span>
-                <!-- Triggers hidden file input -->
-                <button class="browse-btn" id="browseBtn" type="button">
-                  <i class="fas fa-folder-open"></i> Browse Files
-                </button>
-              </div>
-            </div>
-
-            <!--
-              Hidden file input.
-              Programmatically clicked by the Browse button and upload area.
-            -->
-            <input
-              type="file"
-              id="imageInput"
-              accept=".jpg,.jpeg,.png,.bmp,.gif,image/*"
-              style="display: none;"
-            />
-
-            <!--
-              Result image — shown after detection is complete.
-              Replaced with the annotated Base64 image returned by /upload_image.
-            -->
-            <img
-              id="resultImage"
-              src=""
-              alt="Detection result with bounding boxes"
-              style="display: none; width: 100%; height: 100%; object-fit: contain;"
-            />
-
-          </div>
-          <!-- End Video Wrapper -->
-
-          <!-- Upload Action Buttons -->
-          <div class="video-controls">
-            <button id="detectImageBtn" class="control-btn start-btn" disabled>
-              <i class="fas fa-search"></i> Detect Objects
-            </button>
-            <button id="clearImageBtn" class="control-btn reset-btn">
-              <i class="fas fa-times"></i> Clear Image
-            </button>
-          </div>
-          <!-- End Upload Controls -->
-
-          <!-- Upload Detection Results List -->
-          <div class="upload-results" id="uploadResults" style="display: none;">
-            <h4>
-              <i class="fas fa-list-ul"></i> Detected Objects
-            </h4>
-            <div id="uploadObjectsList"></div>
-          </div>
-
+            <div id="uploadResult"></div>
         </div>
-        <!-- End Upload Mode Panel -->
+    </div>
 
-      </section>
-      <!-- ── END LEFT PANEL ──────────────────────────────────── -->
+    <!-- ── Footer ── -->
+    <div class="footer">
+        Built with ❤️ for &nbsp;<span>CodeAlpha AI Internship</span>&nbsp; — Task 4: Object Detection & Tracking
+    </div>
 
+    <script>
+        var statsTimer = null;
 
-      <!-- ════════════════════════════════════════════════════════
-           RIGHT PANEL — STATISTICS SIDEBAR
-           ════════════════════════════════════════════════════════ -->
-      <aside class="stats-section" aria-label="Detection statistics">
+        // Emoji map for common YOLO classes
+        var emojiMap = {
+            'person'        : '🧑',
+            'bicycle'       : '🚲',
+            'car'           : '🚗',
+            'motorcycle'    : '🏍️',
+            'airplane'      : '✈️',
+            'bus'           : '🚌',
+            'train'         : '🚆',
+            'truck'         : '🚛',
+            'boat'          : '⛵',
+            'traffic light' : '🚦',
+            'fire hydrant'  : '🚒',
+            'stop sign'     : '🛑',
+            'bench'         : '🪑',
+            'bird'          : '🐦',
+            'cat'           : '🐱',
+            'dog'           : '🐶',
+            'horse'         : '🐴',
+            'sheep'         : '🐑',
+            'cow'           : '🐄',
+            'elephant'      : '🐘',
+            'bear'          : '🐻',
+            'zebra'         : '🦓',
+            'giraffe'       : '🦒',
+            'backpack'      : '🎒',
+            'umbrella'      : '☂️',
+            'handbag'       : '👜',
+            'tie'           : '👔',
+            'suitcase'      : '🧳',
+            'frisbee'       : '🥏',
+            'skis'          : '🎿',
+            'kite'          : '🪁',
+            'baseball bat'  : '⚾',
+            'skateboard'    : '🛹',
+            'surfboard'     : '🏄',
+            'bottle'        : '🍶',
+            'wine glass'    : '🍷',
+            'cup'           : '☕',
+            'fork'          : '🍴',
+            'knife'         : '🔪',
+            'spoon'         : '🥄',
+            'bowl'          : '🥣',
+            'banana'        : '🍌',
+            'apple'         : '🍎',
+            'sandwich'      : '🥪',
+            'orange'        : '🍊',
+            'pizza'         : '🍕',
+            'donut'         : '🍩',
+            'cake'          : '🎂',
+            'chair'         : '🪑',
+            'couch'         : '🛋️',
+            'potted plant'  : '🪴',
+            'bed'           : '🛏️',
+            'dining table'  : '🍽️',
+            'toilet'        : '🚽',
+            'tv'            : '📺',
+            'laptop'        : '💻',
+            'mouse'         : '🖱️',
+            'remote'        : '📡',
+            'keyboard'      : '⌨️',
+            'cell phone'    : '📱',
+            'phone'         : '📱',
+            'microwave'     : '📦',
+            'oven'          : '🍳',
+            'toaster'       : '🍞',
+            'sink'          : '🚿',
+            'refrigerator'  : '🧊',
+            'book'          : '📚',
+            'clock'         : '🕐',
+            'vase'          : '🏺',
+            'scissors'      : '✂️',
+            'teddy bear'    : '🧸',
+            'hair drier'    : '💨',
+            'toothbrush'    : '🪥'
+        };
 
-        <!-- Detection Statistics Card -->
-        <div class="stats-card">
-          <div class="card-header">
-            <h3><i class="fas fa-chart-bar"></i> Detection Statistics</h3>
-            <span class="refresh-info">
-              <i class="fas fa-sync-alt fa-spin"></i> Auto-refresh 1s
-            </span>
-          </div>
+        function getEmoji(name) {
+            var lower = name.toLowerCase();
+            return emojiMap[lower] || '📦';
+        }
 
-          <div class="stats-grid">
+        // ── File input ──
+        document.getElementById('imageInput').addEventListener('change', function() {
+            var name = this.files[0] ? this.files[0].name : 'No file selected';
+            document.getElementById('fileName').innerText = name;
+        });
 
-            <!-- FPS -->
-            <div class="stat-box">
-              <div
-                class="stat-icon"
-                style="background: rgba(67,233,123,0.15);"
-              >
-                <i class="fas fa-tachometer-alt" style="color:#43E97B;"></i>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value" id="currentFPS">0</div>
-                <div class="stat-label">FPS</div>
-              </div>
-            </div>
+        // ── START ──
+        function startDetection() {
+            setStatus('Connecting to camera...', false);
 
-            <!-- Current Objects -->
-            <div class="stat-box">
-              <div
-                class="stat-icon"
-                style="background: rgba(108,99,255,0.15);"
-              >
-                <i class="fas fa-cube" style="color:#6C63FF;"></i>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value" id="currentObjects">0</div>
-                <div class="stat-label">Current Objects</div>
-              </div>
-            </div>
+            fetch('/start_detection', { method: 'POST' })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        document.getElementById('placeholder').style.display = 'none';
+                        var vid = document.getElementById('video');
+                        vid.style.display = 'block';
+                        vid.src = '/video_feed?' + Date.now();
 
-            <!-- Total Detected -->
-            <div class="stat-box">
-              <div
-                class="stat-icon"
-                style="background: rgba(255,101,132,0.15);"
-              >
-                <i class="fas fa-layer-group" style="color:#FF6584;"></i>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value" id="totalObjects">0</div>
-                <div class="stat-label">Total Detected</div>
-              </div>
-            </div>
+                        setStatus('Detection running — tracking active', true);
+                        document.getElementById('liveDot').classList.remove('inactive');
+                        document.getElementById('liveText').innerText = 'LIVE';
+                        document.getElementById('videoTag').innerText = 'LIVE';
+                        document.getElementById('videoTag').classList.add('live');
+                        document.getElementById('scanLine').classList.add('active');
 
-            <!-- Unique Classes -->
-            <div class="stat-box">
-              <div
-                class="stat-icon"
-                style="background: rgba(255,215,0,0.15);"
-              >
-                <i class="fas fa-tags" style="color:#FFD700;"></i>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value" id="uniqueObjects">0</div>
-                <div class="stat-label">Unique Classes</div>
-              </div>
-            </div>
+                        if (!statsTimer) {
+                            statsTimer = setInterval(updateStats, 800);
+                        }
+                    } else {
+                        setStatus('Error: ' + data.message, false);
+                    }
+                })
+                .catch(function(err) {
+                    setStatus('Cannot connect to server!', false);
+                    alert('ERROR: ' + err + '\n\nMake sure Flask is running on port 5002');
+                });
+        }
 
-          </div>
-          <!-- End Stats Grid -->
-        </div>
-        <!-- End Statistics Card -->
+        // ── STOP ──
+        function stopDetection() {
+            fetch('/stop_detection', { method: 'POST' })
+                .then(function() {
+                    document.getElementById('video').style.display = 'none';
+                    document.getElementById('video').src = '';
+                    document.getElementById('placeholder').style.display = 'flex';
 
+                    setStatus('Detection stopped', false);
+                    document.getElementById('liveDot').classList.add('inactive');
+                    document.getElementById('liveText').innerText = 'OFFLINE';
+                    document.getElementById('videoTag').innerText = 'STANDBY';
+                    document.getElementById('videoTag').classList.remove('live');
+                    document.getElementById('scanLine').classList.remove('active');
 
-        <!-- Detected Objects List Card -->
-        <div class="stats-card">
-          <div class="card-header">
-            <h3><i class="fas fa-list-ul"></i> Objects in Frame</h3>
-          </div>
-          <div class="objects-list" id="objectsList">
-            <!-- Populated dynamically by script.js -->
-            <div class="empty-state">
-              <i class="fas fa-search"></i>
-              <p>No objects detected</p>
-              <span>Start webcam or upload an image</span>
-            </div>
-          </div>
-        </div>
-        <!-- End Objects List Card -->
+                    if (statsTimer) {
+                        clearInterval(statsTimer);
+                        statsTimer = null;
+                    }
 
+                    // Clear detected objects
+                    document.getElementById('detectedObjects').innerHTML =
+                        '<div class="no-objects">' +
+                        '<div class="no-icon">👁️</div>' +
+                        '<p>Start detection to see<br>what\'s in the camera</p>' +
+                        '</div>';
+                })
+                .catch(function(err) { console.log('Stop error:', err); });
+        }
 
-        <!-- Model Information Card -->
-        <div class="stats-card">
-          <div class="card-header">
-            <h3><i class="fas fa-info-circle"></i> Model Information</h3>
-          </div>
-          <div class="model-info">
-            <div class="info-row">
-              <span class="info-label">Model</span>
-              <span class="info-value highlight">YOLOv8 Nano</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Tracker</span>
-              <span class="info-value">SORT + Kalman</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Classes</span>
-              <span class="info-value">80 (COCO)</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Stream</span>
-              <span class="info-value">MJPEG</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Confidence</span>
-              <span class="info-value">≥ 40%</span>
-            </div>
-          </div>
-        </div>
-        <!-- End Model Info Card -->
+        // ── RESET ──
+        function resetStats() {
+            fetch('/reset_stats', { method: 'POST' })
+                .then(function() {
+                    document.getElementById('fps').innerText     = '0';
+                    document.getElementById('objects').innerText = '0';
+                    document.getElementById('tracks').innerText  = '0';
+                    document.getElementById('total').innerText   = '0';
+                    document.getElementById('detectedObjects').innerHTML =
+                        '<div class="no-objects">' +
+                        '<div class="no-icon">👁️</div>' +
+                        '<p>Scanning...</p>' +
+                        '</div>';
+                })
+                .catch(function() {});
+        }
 
-      </aside>
-      <!-- ── END RIGHT PANEL ─────────────────────────────────── -->
+        // ── UPDATE STATS + DETECTED OBJECTS ──
+        function updateStats() {
+            fetch('/stats')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        document.getElementById('fps').innerText     = data.stats.fps;
+                        document.getElementById('objects').innerText = data.stats.current_objects;
+                        document.getElementById('total').innerText   = data.stats.total_objects;
 
-    </main>
-    <!-- ── END MAIN CONTENT ───────────────────────────────────── -->
+                        // ── Update "What's In The Camera" panel ──
+                        var found = data.stats.objects_found;
+                        var panel = document.getElementById('detectedObjects');
 
+                        if (found && Object.keys(found).length > 0) {
+                            var html = '';
+                            Object.keys(found).forEach(function(name) {
+                                var count   = found[name];
+                                var emoji   = getEmoji(name);
+                                var display = name.charAt(0).toUpperCase() + name.slice(1);
+                                html +=
+                                    '<div class="object-card active">' +
+                                        '<div class="object-emoji">' + emoji + '</div>' +
+                                        '<div class="object-info">' +
+                                            '<div class="object-class-name">' + display + '</div>' +
+                                            '<div class="object-class-sub">Detected in frame</div>' +
+                                        '</div>' +
+                                        '<div class="object-count-badge">' + count + '</div>' +
+                                    '</div>';
+                            });
+                            panel.innerHTML = html;
+                        } else {
+                            panel.innerHTML =
+                                '<div class="no-objects">' +
+                                '<div class="no-icon">🔍</div>' +
+                                '<p>No objects detected<br>Point camera at objects</p>' +
+                                '</div>';
+                        }
+                    }
+                })
+                .catch(function() {});
+        }
 
-    <!-- ── FOOTER ──────────────────────────────────────────────── -->
-    <footer class="footer">
-      <strong>CodeAlpha</strong> AI Internship — Task 4 |
-      Object Detection &amp; Tracking with YOLOv8 + SORT
-    </footer>
+        // ── UPLOAD IMAGE ──
+        function uploadImage() {
+            var fileInput = document.getElementById('imageInput');
+            if (!fileInput.files.length) {
+                alert('Please select an image first.');
+                return;
+            }
 
-  </div>
-  <!-- ── END CONTAINER ─────────────────────────────────────────── -->
+            document.getElementById('uploadResult').innerHTML =
+                '<div class="processing"><div class="spinner"></div> Analyzing image with YOLOv8...</div>';
 
-  <!-- Project Script — loaded at end of body, no inline JS anywhere -->
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+            var formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/upload_image', { method: 'POST', body: formData })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var tags = '';
+                        if (data.detections && data.detections.length > 0) {
+                            data.detections.forEach(function(d) {
+                                var emoji = getEmoji(d.class);
+                                tags += '<span class="det-tag">' + emoji + ' ' +
+                                        d.class + ' ' + d.confidence +
+                                        '% | ID:' + d.track_id + '</span>';
+                            });
+                        }
+                        document.getElementById('uploadResult').innerHTML =
+                            '<div class="result-grid">' +
+                                '<img id="resultImage" src="' + data.image + '" alt="Result">' +
+                                '<div class="result-info">' +
+                                    '<div class="result-stat"><h4>Objects Found</h4>' +
+                                    '<p>' + data.total_objects + '</p></div>' +
+                                    '<div class="result-stat"><h4>Unique Classes</h4>' +
+                                    '<p>' + data.unique_classes + '</p></div>' +
+                                    '<div class="detection-tags">' + tags + '</div>' +
+                                '</div>' +
+                            '</div>';
+                    } else {
+                        document.getElementById('uploadResult').innerHTML =
+                            '<p style="color:#ff4d6d;padding:16px;">Error: ' + data.error + '</p>';
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('uploadResult').innerHTML =
+                        '<p style="color:#ff4d6d;padding:16px;">Upload failed.</p>';
+                });
+        }
+
+        // ── Helper ──
+        function setStatus(text, active) {
+            document.getElementById('statusText').innerText      = text;
+            document.getElementById('statusText').style.color    = active ? '#00ff88' : '#777';
+            var dot = document.getElementById('statusDot');
+            if (active) { dot.classList.add('active'); }
+            else        { dot.classList.remove('active'); }
+        }
+    </script>
 
 </body>
 </html>
